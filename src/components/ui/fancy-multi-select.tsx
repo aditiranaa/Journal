@@ -13,9 +13,11 @@ import {
 import { roles_assignment } from '@/lib/const'
 import { cn } from '@/lib/utils'
 import { Command as CommandPrimitive } from 'cmdk'
-import { CardContent } from '../kanban/model'
 
-type Framework = Record<'value' | 'label', string>
+type Framework = {
+  value: string
+  label: string
+}
 
 interface IValue {
   label: string
@@ -24,10 +26,10 @@ interface IValue {
 
 interface ISelectProps {
   values: IValue[]
-  defaultValues?: CardContent['assignTo']
   placeholder: string
   onChange: (selectedValues: string[]) => void
-  className: string
+  className?: string
+  defaultValues?: string[] // ✅ FIXED (was missing)
 }
 
 export function FancyMultiSelect({
@@ -39,6 +41,7 @@ export function FancyMultiSelect({
 }: ISelectProps) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [open, setOpen] = React.useState(false)
+
   const [selected, setSelected] = React.useState<Framework[]>(
     roles_assignment.filter(item => defaultValues.includes(item.value))
   )
@@ -52,20 +55,20 @@ export function FancyMultiSelect({
   const handleKeyDown = React.useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       const input = inputRef.current
-      if (input) {
-        if (e.key === 'Delete' || e.key === 'Backspace') {
-          if (input.value === '') {
-            setSelected(prev => {
-              const newSelected = [...prev]
-              newSelected.pop()
-              return newSelected
-            })
-          }
+      if (!input) return
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (input.value === '') {
+          setSelected(prev => {
+            const newSelected = [...prev]
+            newSelected.pop()
+            return newSelected
+          })
         }
-        // This is not a default behaviour of the <input /> field
-        if (e.key === 'Escape') {
-          input.blur()
-        }
+      }
+
+      if (e.key === 'Escape') {
+        input.blur()
       }
     },
     []
@@ -73,11 +76,11 @@ export function FancyMultiSelect({
 
   React.useEffect(() => {
     onChange(selected.map(item => item.value))
-  }, [selected])
+  }, [selected, onChange])
 
   const selectables = React.useMemo(() => {
     return values.filter(
-      item => !selected.map(item => item.value).includes(item.value)
+      item => !selected.map(s => s.value).includes(item.value)
     )
   }, [values, selected])
 
@@ -88,29 +91,25 @@ export function FancyMultiSelect({
     >
       <div className='group rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2'>
         <div className='flex flex-wrap gap-1'>
-          {selected.map(framework => {
-            return (
-              <Badge key={framework.value} variant='secondary'>
-                {framework.label}
-                <button
-                  className='ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2'
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      handleUnselect(framework)
-                    }
-                  }}
-                  onMouseDown={e => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                  }}
-                  onClick={() => handleUnselect(framework)}
-                >
-                  <X className='h-3 w-3 text-muted-foreground hover:text-foreground' />
-                </button>
-              </Badge>
-            )
-          })}
-          {/* Avoid having the "Search" Icon */}
+          {selected.map(framework => (
+            <Badge key={framework.value} variant='secondary'>
+              {framework.label}
+              <button
+                className='ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2'
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleUnselect(framework)
+                }}
+                onMouseDown={e => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
+                onClick={() => handleUnselect(framework)}
+              >
+                <X className='h-3 w-3 text-muted-foreground hover:text-foreground' />
+              </button>
+            </Badge>
+          ))}
+
           <CommandPrimitive.Input
             disabled={!selectables.length}
             ref={inputRef}
@@ -123,32 +122,31 @@ export function FancyMultiSelect({
           />
         </div>
       </div>
+
       <div className='relative mt-2'>
         <CommandList>
-          {open && selectables.length > 0 ? (
+          {open && selectables.length > 0 && (
             <div className='absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in'>
               <CommandGroup className='h-full overflow-auto'>
-                {selectables.map(framework => {
-                  return (
-                    <CommandItem
-                      key={framework.value}
-                      onMouseDown={e => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                      }}
-                      onSelect={() => {
-                        setInputValue('')
-                        setSelected(prev => [...prev, framework])
-                      }}
-                      className={'cursor-pointer'}
-                    >
-                      {framework.label}
-                    </CommandItem>
-                  )
-                })}
+                {selectables.map(framework => (
+                  <CommandItem
+                    key={framework.value}
+                    onMouseDown={e => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                    }}
+                    onSelect={() => {
+                      setInputValue('')
+                      setSelected(prev => [...prev, framework])
+                    }}
+                    className='cursor-pointer'
+                  >
+                    {framework.label}
+                  </CommandItem>
+                ))}
               </CommandGroup>
             </div>
-          ) : null}
+          )}
         </CommandList>
       </div>
     </Command>

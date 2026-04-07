@@ -1,8 +1,7 @@
-import CryptoJS from "crypto-js"
+import CryptoJS from 'crypto-js'
 
 // derive key from PIN
-export const getKey = (pin: string) =>
-  CryptoJS.SHA256(pin).toString()
+export const getKey = (pin: string) => CryptoJS.SHA256(pin).toString()
 
 export const encrypt = (text: string, pin: string) => {
   const key = getKey(pin)
@@ -20,5 +19,4 @@ export const decrypt = (cipher: string, pin: string) => {
 }
 
 // hash PIN (store this only)
-export const hashPin = (pin: string) =>
-  CryptoJS.SHA256(pin).toString()
+export const hashPin = (pin: string) => CryptoJS.SHA256(pin).toString()
