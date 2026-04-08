@@ -173,9 +173,12 @@ const result = decrypt(entry.encryptedContent, pinInput)
           ) : (
             <>
               {/* CONTENT */}
-              <p className="whitespace-pre-line leading-relaxed">
-                {entry.locked ? decrypted : entry.content}
-              </p>
+              <div
+              className="prose max-w-none"
+              dangerouslySetInnerHTML={{
+               __html: entry.locked ? decrypted : entry.content
+             }}
+/>
 
               {/* IMAGE */}
               {entry.image && (

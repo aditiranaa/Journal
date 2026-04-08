@@ -4,7 +4,11 @@ import { Input } from '@/components/ui/input'
 import { useJournal } from '@/context/journal-context'
 import { encrypt, hashPin } from '@/utils/crypto'
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router-dom'
+
+// ✅ Tiptap
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
 
 const moods = ['😊', '😢', '😡', '😌', '🔥', '💭']
 const categories = ['Personal', 'Work', 'Ideas', 'Travel']
@@ -12,28 +16,31 @@ const categories = ['Personal', 'Work', 'Ideas', 'Travel']
 const Editor = () => {
   const navigate = useNavigate()
   const { id } = useParams()
-
   const { entries, addEntry, updateEntry } = useJournal()
 
   const existingEntry = entries.find(e => e.id === Number(id))
 
-  // 🧾 BASIC STATES
+  // 🧾 STATES
   const [title, setTitle] = useState(existingEntry?.title || '')
   const [content, setContent] = useState(existingEntry?.content || '')
   const [mood, setMood] = useState(existingEntry?.mood || '😊')
-  const [category, setCategory] = useState(
-    existingEntry?.category || 'Personal'
-  )
-  const [image, setImage] = useState<string | null>(
-    existingEntry?.image || null
-  )
+  const [category, setCategory] = useState(existingEntry?.category || 'Personal')
+  const [image, setImage] = useState<string | null>(existingEntry?.image || null)
 
-  // 🔒 SECURITY STATES
   const [locked, setLocked] = useState(existingEntry?.locked || false)
   const [pin, setPin] = useState('')
   const [hint, setHint] = useState(existingEntry?.hint || '')
 
-  // ================= LOAD EXISTING =================
+  // ✅ Tiptap Editor
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: content,
+    onUpdate: ({ editor }) => {
+      setContent(editor.getHTML())
+    },
+  })
+
+  // Load existing entry
   useEffect(() => {
     if (existingEntry) {
       setTitle(existingEntry.title)
@@ -46,7 +53,7 @@ const Editor = () => {
     }
   }, [existingEntry])
 
-  // ================= SAVE =================
+  // Save entry
   const handleSave = () => {
     if (locked && !pin) {
       alert('PIN required')
@@ -65,19 +72,13 @@ const Editor = () => {
       image,
       locked,
       pinHash: locked ? hashPin(pin) : undefined,
-      hint
+      hint,
     }
 
     if (id) {
-      updateEntry({
-        id: Number(id),
-        ...entryData
-      })
+      updateEntry({ id: Number(id), ...entryData })
     } else {
-      addEntry({
-        id: Date.now(),
-        ...entryData
-      })
+      addEntry({ id: Date.now(), ...entryData })
     }
 
     navigate('/dashboard')
@@ -85,6 +86,7 @@ const Editor = () => {
 
   return (
     <div className='mx-auto max-w-3xl space-y-6 p-6'>
+
       {/* Title */}
       <Input
         placeholder='Title...'
@@ -93,13 +95,29 @@ const Editor = () => {
         className='text-xl font-semibold'
       />
 
-      {/* Content */}
-      <textarea
-        placeholder='Start writing your thoughts...'
-        value={content}
-        onChange={e => setContent(e.target.value)}
-        className='min-h-[200px] w-full rounded-md border p-3'
-      />
+      {/* 🔥 Toolbar */}
+      <div className='flex gap-2 flex-wrap'>
+        <Button onClick={() => editor?.chain().focus().toggleBold().run()}>
+          Bold
+        </Button>
+
+        <Button onClick={() => editor?.chain().focus().toggleItalic().run()}>
+          Italic
+        </Button>
+
+        <Button onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}>
+          H1
+        </Button>
+
+        <Button onClick={() => editor?.chain().focus().toggleBulletList().run()}>
+          List
+        </Button>
+      </div>
+
+      {/* ✍️ Editor */}
+      <div className='border rounded-md p-3 min-h-[200px]'>
+        <EditorContent editor={editor} />
+      </div>
 
       {/* Image */}
       {image && (
@@ -123,7 +141,7 @@ const Editor = () => {
         }}
       />
 
-      {/* 🔒 LOCK SYSTEM */}
+      {/* 🔒 Lock */}
       <Card>
         <CardContent className='space-y-3 p-4'>
           <label className='flex items-center gap-2'>
@@ -145,7 +163,7 @@ const Editor = () => {
               />
 
               <Input
-                placeholder='Hint (optional)'
+                placeholder='Hint'
                 value={hint}
                 onChange={e => setHint(e.target.value)}
               />
