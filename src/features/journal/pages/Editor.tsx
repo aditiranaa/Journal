@@ -5,10 +5,12 @@ import { useJournal } from '@/context/journal-context'
 import { encrypt, hashPin } from '@/utils/crypto'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { BubbleMenu } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
 
 // ✅ Tiptap
 import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
+
 
 const moods = ['😊', '😢', '😡', '😌', '🔥', '💭']
 const categories = ['Personal', 'Work', 'Ideas', 'Travel']
@@ -114,6 +116,34 @@ const Editor = () => {
         </Button>
       </div>
 
+{editor && (
+  <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
+    <div className="flex gap-2 bg-white shadow-md border rounded-md p-2">
+
+      <button
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        className="px-2 py-1 text-sm"
+      >
+        Bold
+      </button>
+
+      <button
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+        className="px-2 py-1 text-sm"
+      >
+        Italic
+      </button>
+
+      <button
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+        className="px-2 py-1 text-sm"
+      >
+        H1
+      </button>
+
+    </div>
+  </BubbleMenu>
+)}
       {/* ✍️ Editor */}
       <div className='border rounded-md p-3 min-h-[200px]'>
         <EditorContent editor={editor} />
