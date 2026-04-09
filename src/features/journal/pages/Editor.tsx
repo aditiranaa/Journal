@@ -3,7 +3,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useJournal } from '@/context/journal-context'
 import { encrypt, hashPin } from '@/utils/crypto'
-import BubbleMenu from '@tiptap/extension-bubble-menu'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { useEffect, useState } from 'react'
@@ -18,8 +17,6 @@ const Editor = () => {
   const { entries, addEntry, updateEntry } = useJournal()
 
   const existingEntry = entries.find(e => e.id === Number(id))
-
-  // 🧾 STATES
   const [title, setTitle] = useState(existingEntry?.title || '')
   const [content, setContent] = useState(existingEntry?.content || '')
   const [mood, setMood] = useState(existingEntry?.mood || '😊')
@@ -34,21 +31,15 @@ const Editor = () => {
   const [pin, setPin] = useState('')
   const [hint, setHint] = useState(existingEntry?.hint || '')
 
-  // ✅ Tiptap Editor
+  // ✅ CLEAN EDITOR (NO BUBBLE MENU)
   const editor = useEditor({
-    extensions: [
-      StarterKit,
-      BubbleMenu.configure({
-        element: document.createElement('div')
-      })
-    ],
+    extensions: [StarterKit],
     content: content,
     onUpdate: ({ editor }) => {
       setContent(editor.getHTML())
     }
   })
 
-  // Load existing entry
   useEffect(() => {
     if (existingEntry) {
       setTitle(existingEntry.title)
@@ -61,7 +52,6 @@ const Editor = () => {
     }
   }, [existingEntry])
 
-  // Save entry
   const handleSave = () => {
     if (locked && !pin) {
       alert('PIN required')
@@ -102,7 +92,7 @@ const Editor = () => {
         className='text-xl font-semibold'
       />
 
-      {/* 🔥 Toolbar */}
+      {/* ✅ STABLE TOOLBAR */}
       <div className='flex flex-wrap gap-2'>
         <Button onClick={() => editor?.chain().focus().toggleBold().run()}>
           Bold
@@ -127,25 +117,6 @@ const Editor = () => {
         </Button>
       </div>
 
-      {editor && (
-        <div className='fixed bottom-6 left-1/2 flex -translate-x-1/2 gap-2 rounded bg-black px-3 py-2 text-white shadow-lg'>
-          <button onClick={() => editor.chain().focus().toggleBold().run()}>
-            Bold
-          </button>
-
-          <button onClick={() => editor.chain().focus().toggleItalic().run()}>
-            Italic
-          </button>
-
-          <button
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 1 }).run()
-            }
-          >
-            H1
-          </button>
-        </div>
-      )}
       {/* ✍️ Editor */}
       <div className='min-h-[200px] rounded-md border p-3'>
         <EditorContent editor={editor} />
@@ -211,9 +182,7 @@ const Editor = () => {
             <button
               key={m}
               onClick={() => setMood(m)}
-              className={`rounded p-2 text-xl ${
-                mood === m ? 'bg-gray-200' : ''
-              }`}
+              className={`rounded p-2 text-xl ${mood === m ? 'bg-gray-200' : ''}`}
             >
               {m}
             </button>
