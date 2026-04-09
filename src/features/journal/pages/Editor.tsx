@@ -3,14 +3,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useJournal } from '@/context/journal-context'
 import { encrypt, hashPin } from '@/utils/crypto'
+import BubbleMenu from '@tiptap/extension-bubble-menu'
+import { EditorContent, useEditor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { BubbleMenu } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-
-// ✅ Tiptap
-import { useEditor, EditorContent } from '@tiptap/react'
-
 
 const moods = ['😊', '😢', '😡', '😌', '🔥', '💭']
 const categories = ['Personal', 'Work', 'Ideas', 'Travel']
@@ -26,8 +23,12 @@ const Editor = () => {
   const [title, setTitle] = useState(existingEntry?.title || '')
   const [content, setContent] = useState(existingEntry?.content || '')
   const [mood, setMood] = useState(existingEntry?.mood || '😊')
-  const [category, setCategory] = useState(existingEntry?.category || 'Personal')
-  const [image, setImage] = useState<string | null>(existingEntry?.image || null)
+  const [category, setCategory] = useState(
+    existingEntry?.category || 'Personal'
+  )
+  const [image, setImage] = useState<string | null>(
+    existingEntry?.image || null
+  )
 
   const [locked, setLocked] = useState(existingEntry?.locked || false)
   const [pin, setPin] = useState('')
@@ -35,11 +36,16 @@ const Editor = () => {
 
   // ✅ Tiptap Editor
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      BubbleMenu.configure({
+        element: document.createElement('div')
+      })
+    ],
     content: content,
     onUpdate: ({ editor }) => {
       setContent(editor.getHTML())
-    },
+    }
   })
 
   // Load existing entry
@@ -74,7 +80,7 @@ const Editor = () => {
       image,
       locked,
       pinHash: locked ? hashPin(pin) : undefined,
-      hint,
+      hint
     }
 
     if (id) {
@@ -88,7 +94,6 @@ const Editor = () => {
 
   return (
     <div className='mx-auto max-w-3xl space-y-6 p-6'>
-
       {/* Title */}
       <Input
         placeholder='Title...'
@@ -98,7 +103,7 @@ const Editor = () => {
       />
 
       {/* 🔥 Toolbar */}
-      <div className='flex gap-2 flex-wrap'>
+      <div className='flex flex-wrap gap-2'>
         <Button onClick={() => editor?.chain().focus().toggleBold().run()}>
           Bold
         </Button>
@@ -107,45 +112,42 @@ const Editor = () => {
           Italic
         </Button>
 
-        <Button onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}>
+        <Button
+          onClick={() =>
+            editor?.chain().focus().toggleHeading({ level: 1 }).run()
+          }
+        >
           H1
         </Button>
 
-        <Button onClick={() => editor?.chain().focus().toggleBulletList().run()}>
+        <Button
+          onClick={() => editor?.chain().focus().toggleBulletList().run()}
+        >
           List
         </Button>
       </div>
 
-{editor && (
-  <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
-    <div className="flex gap-2 bg-white shadow-md border rounded-md p-2">
+      {editor && (
+        <div className='fixed bottom-6 left-1/2 flex -translate-x-1/2 gap-2 rounded bg-black px-3 py-2 text-white shadow-lg'>
+          <button onClick={() => editor.chain().focus().toggleBold().run()}>
+            Bold
+          </button>
 
-      <button
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        className="px-2 py-1 text-sm"
-      >
-        Bold
-      </button>
+          <button onClick={() => editor.chain().focus().toggleItalic().run()}>
+            Italic
+          </button>
 
-      <button
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        className="px-2 py-1 text-sm"
-      >
-        Italic
-      </button>
-
-      <button
-        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        className="px-2 py-1 text-sm"
-      >
-        H1
-      </button>
-
-    </div>
-  </BubbleMenu>
-)}
+          <button
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 1 }).run()
+            }
+          >
+            H1
+          </button>
+        </div>
+      )}
       {/* ✍️ Editor */}
-      <div className='border rounded-md p-3 min-h-[200px]'>
+      <div className='min-h-[200px] rounded-md border p-3'>
         <EditorContent editor={editor} />
       </div>
 
