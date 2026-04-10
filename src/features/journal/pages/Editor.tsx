@@ -8,21 +8,25 @@ import StarterKit from '@tiptap/starter-kit'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
+// Icons
+import {
+  Bold,
+  Italic,
+  Underline as UnderlineIcon,
+  Strikethrough,
+  List,
+  ListOrdered,
+  Highlighter,
+  Palette,
+} from 'lucide-react'
+
 // Extensions
 import Highlight from '@tiptap/extension-highlight'
 import Underline from '@tiptap/extension-underline'
 import Placeholder from '@tiptap/extension-placeholder'
 import CharacterCount from '@tiptap/extension-character-count'
 import Color from '@tiptap/extension-color'
-import {TextStyle} from '@tiptap/extension-text-style'
-
-// Dropdown
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu'
+import { TextStyle } from '@tiptap/extension-text-style'
 
 const moods = ['😊', '😢', '😡', '😌', '🔥', '💭']
 const categories = ['Personal', 'Work', 'Ideas', 'Travel']
@@ -48,7 +52,7 @@ const Editor = () => {
   const [pin, setPin] = useState('')
   const [hint, setHint] = useState(existingEntry?.hint || '')
 
-  // ✅ FIXED EDITOR
+  // ✅ CLEAN EDITOR
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -121,105 +125,98 @@ const Editor = () => {
         className='text-xl font-semibold'
       />
 
-      {/* 🎨 Color Picker */}
-      <div className='flex items-center gap-2'>
-        <input
-          type='color'
-          onChange={e =>
-            editor?.chain().focus().setColor(e.target.value).run()
-          }
-          className='h-8 w-10 cursor-pointer border rounded'
-        />
+      {/* ✨ PREMIUM TOOLBAR */}
+      <div className="flex items-center gap-2 rounded-xl border bg-gray-900 text-white px-3 py-2 shadow-sm">
 
-        <Button
-          onClick={() => editor?.chain().focus().unsetColor().run()}
-        >
-          Clear Color
-        </Button>
-      </div>
-
-      {/* ✅ Toolbar */}
-      <div className='flex flex-wrap gap-2'>
-        <Button
-          variant={editor?.isActive('bold') ? 'default' : 'outline'}
+        {/* Bold */}
+        <button
+          title="Bold"
           onClick={() => editor?.chain().focus().toggleBold().run()}
+          className={`p-2 rounded ${
+            editor?.isActive('bold') ? 'bg-gray-700' : 'hover:bg-gray-700'
+          }`}
         >
-          Bold
-        </Button>
+          <Bold size={18} />
+        </button>
 
-        <Button onClick={() => editor?.chain().focus().toggleItalic().run()}>
-          Italic
-        </Button>
+        {/* Italic */}
+        <button
+          title="Italic"
+          onClick={() => editor?.chain().focus().toggleItalic().run()}
+          className={`p-2 rounded ${
+            editor?.isActive('italic') ? 'bg-gray-700' : 'hover:bg-gray-700'
+          }`}
+        >
+          <Italic size={18} />
+        </button>
 
-        <Button onClick={() => editor?.chain().focus().toggleUnderline().run()}>
-          Underline
-        </Button>
+        {/* Underline */}
+        <button
+          title="Underline"
+          onClick={() => editor?.chain().focus().toggleUnderline().run()}
+          className={`p-2 rounded ${
+            editor?.isActive('underline') ? 'bg-gray-700' : 'hover:bg-gray-700'
+          }`}
+        >
+          <UnderlineIcon size={18} />
+        </button>
 
-        <Button onClick={() => editor?.chain().focus().toggleStrike().run()}>
-          Strike
-        </Button>
+        {/* Strike */}
+        <button
+          title="Strike"
+          onClick={() => editor?.chain().focus().toggleStrike().run()}
+          className="p-2 hover:bg-gray-700 rounded"
+        >
+          <Strikethrough size={18} />
+        </button>
 
-        <Button onClick={() => editor?.chain().focus().toggleHighlight().run()}>
-          Highlight
-        </Button>
+        <div className="w-px h-5 bg-gray-600" />
 
-        <Button onClick={() => editor?.chain().focus().toggleBulletList().run()}>
-          Bullet List
-        </Button>
+        {/* Bullet List */}
+        <button
+          title="Bullet List"
+          onClick={() => editor?.chain().focus().toggleBulletList().run()}
+          className="p-2 hover:bg-gray-700 rounded"
+        >
+          <List size={18} />
+        </button>
 
-        <Button onClick={() => editor?.chain().focus().toggleOrderedList().run()}>
-          Numbered List
-        </Button>
+        {/* Numbered List */}
+        <button
+          title="Numbered List"
+          onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+          className="p-2 hover:bg-gray-700 rounded"
+        >
+          <ListOrdered size={18} />
+        </button>
 
-        <Button onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}>
-          H1
-        </Button>
+        <div className="w-px h-5 bg-gray-600" />
 
-        <Button onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}>
-          H2
-        </Button>
+        {/* Highlight */}
+        <button
+          title="Highlight"
+          onClick={() => editor?.chain().focus().toggleHighlight().run()}
+          className="p-2 hover:bg-gray-700 rounded"
+        >
+          <Highlighter size={18} />
+        </button>
+
+        {/* 🎨 Color Picker */}
+        <label className="p-2 hover:bg-gray-700 rounded cursor-pointer">
+          <Palette size={18} />
+          <input
+            type="color"
+            className="hidden"
+            onChange={(e) =>
+              editor?.chain().focus().setColor(e.target.value).run()
+            }
+          />
+        </label>
+
       </div>
-
-      {/* 🧩 Format Dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button>Format</Button>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent>
-          <DropdownMenuItem onClick={() => editor?.chain().focus().toggleBold().run()}>
-            Bold
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onClick={() => editor?.chain().focus().toggleItalic().run()}>
-            Italic
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onClick={() => editor?.chain().focus().toggleUnderline().run()}>
-            Underline
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onClick={() => editor?.chain().focus().toggleHighlight().run()}>
-            Highlight
-          </DropdownMenuItem>
-
-          <DropdownMenuItem>
-            <input
-              type='color'
-              onChange={e =>
-                editor?.chain().focus().setColor(e.target.value).run()
-              }
-            />
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onClick={() => editor?.chain().focus().unsetColor().run()}>
-            Clear Color
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
 
       {/* ✍️ Editor */}
-      <div className='min-h-[200px] rounded-md border p-3'>
+      <div className="min-h-[250px] rounded-xl border bg-gray-900 text-white p-4 shadow-sm focus-within:ring-2 focus-within:ring-gray-400">
         <EditorContent editor={editor} />
       </div>
 
