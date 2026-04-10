@@ -82,6 +82,16 @@
 }
 
 /* THEMES */
+
+.ProseMirror {
+  outline: none;
+  color: inherit;
+}
+
+.ProseMirror p {
+  margin: 0;
+}
+
 body.light {
   background-color: #ffffff;
   color: #111;

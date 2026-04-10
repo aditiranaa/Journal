@@ -202,21 +202,26 @@ const Editor = () => {
         </button>
 
         {/* 🎨 Color Picker */}
-        <label className="p-2 hover:bg-gray-700 rounded cursor-pointer">
-          <Palette size={18} />
-          <input
-            type="color"
-            className="hidden"
-            onChange={(e) =>
-              editor?.chain().focus().setColor(e.target.value).run()
-            }
-          />
-        </label>
+    <label className="p-2 hover:bg-gray-700 rounded cursor-pointer">
+  <Palette size={18} />
+  <input
+    type="color"
+    className="hidden"
+    onChange={(e) => {
+      editor?.chain().focus().setColor(e.target.value).run()
+
+      // 👇 THIS FIXES THE BLUE STICKING ISSUE
+      setTimeout(() => {
+        editor?.chain().focus().unsetColor().run()
+      }, 0)
+    }}
+  />
+</label>
 
       </div>
 
       {/* ✍️ Editor */}
-      <div className="min-h-[250px] rounded-xl border bg-gray-900 text-white p-4 shadow-sm focus-within:ring-2 focus-within:ring-gray-400">
+      <div className="min-h-[250px] rounded-xl border text-black bg-white p-4 shadow-sm">
         <EditorContent editor={editor} />
       </div>
 
