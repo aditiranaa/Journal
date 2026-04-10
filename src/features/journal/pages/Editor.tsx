@@ -1,5 +1,3 @@
-// rebuild trigger
-
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -10,6 +8,22 @@ import StarterKit from '@tiptap/starter-kit'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
+// Extensions
+import Highlight from '@tiptap/extension-highlight'
+import Underline from '@tiptap/extension-underline'
+import Placeholder from '@tiptap/extension-placeholder'
+import CharacterCount from '@tiptap/extension-character-count'
+import Color from '@tiptap/extension-color'
+import {TextStyle} from '@tiptap/extension-text-style'
+
+// Dropdown
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
+
 const moods = ['😊', '😢', '😡', '😌', '🔥', '💭']
 const categories = ['Personal', 'Work', 'Ideas', 'Travel']
 
@@ -19,6 +33,7 @@ const Editor = () => {
   const { entries, addEntry, updateEntry } = useJournal()
 
   const existingEntry = entries.find(e => e.id === Number(id))
+
   const [title, setTitle] = useState(existingEntry?.title || '')
   const [content, setContent] = useState(existingEntry?.content || '')
   const [mood, setMood] = useState(existingEntry?.mood || '😊')
@@ -33,13 +48,25 @@ const Editor = () => {
   const [pin, setPin] = useState('')
   const [hint, setHint] = useState(existingEntry?.hint || '')
 
-  // ✅ CLEAN EDITOR (NO BUBBLE MENU)
+  // ✅ FIXED EDITOR
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      Highlight,
+      Underline,
+      TextStyle,
+      Color,
+      CharacterCount.configure({
+        limit: 5000,
+      }),
+      Placeholder.configure({
+        placeholder: 'Start writing your thoughts...',
+      }),
+    ],
     content: content,
     onUpdate: ({ editor }) => {
       setContent(editor.getHTML())
-    }
+    },
   })
 
   useEffect(() => {
@@ -72,7 +99,7 @@ const Editor = () => {
       image,
       locked,
       pinHash: locked ? hashPin(pin) : undefined,
-      hint
+      hint,
     }
 
     if (id) {
@@ -94,9 +121,29 @@ const Editor = () => {
         className='text-xl font-semibold'
       />
 
-      {/* ✅ STABLE TOOLBAR */}
+      {/* 🎨 Color Picker */}
+      <div className='flex items-center gap-2'>
+        <input
+          type='color'
+          onChange={e =>
+            editor?.chain().focus().setColor(e.target.value).run()
+          }
+          className='h-8 w-10 cursor-pointer border rounded'
+        />
+
+        <Button
+          onClick={() => editor?.chain().focus().unsetColor().run()}
+        >
+          Clear Color
+        </Button>
+      </div>
+
+      {/* ✅ Toolbar */}
       <div className='flex flex-wrap gap-2'>
-        <Button onClick={() => editor?.chain().focus().toggleBold().run()}>
+        <Button
+          variant={editor?.isActive('bold') ? 'default' : 'outline'}
+          onClick={() => editor?.chain().focus().toggleBold().run()}
+        >
           Bold
         </Button>
 
@@ -104,24 +151,81 @@ const Editor = () => {
           Italic
         </Button>
 
-        <Button
-          onClick={() =>
-            editor?.chain().focus().toggleHeading({ level: 1 }).run()
-          }
-        >
+        <Button onClick={() => editor?.chain().focus().toggleUnderline().run()}>
+          Underline
+        </Button>
+
+        <Button onClick={() => editor?.chain().focus().toggleStrike().run()}>
+          Strike
+        </Button>
+
+        <Button onClick={() => editor?.chain().focus().toggleHighlight().run()}>
+          Highlight
+        </Button>
+
+        <Button onClick={() => editor?.chain().focus().toggleBulletList().run()}>
+          Bullet List
+        </Button>
+
+        <Button onClick={() => editor?.chain().focus().toggleOrderedList().run()}>
+          Numbered List
+        </Button>
+
+        <Button onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}>
           H1
         </Button>
 
-        <Button
-          onClick={() => editor?.chain().focus().toggleBulletList().run()}
-        >
-          List
+        <Button onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}>
+          H2
         </Button>
       </div>
+
+      {/* 🧩 Format Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button>Format</Button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent>
+          <DropdownMenuItem onClick={() => editor?.chain().focus().toggleBold().run()}>
+            Bold
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={() => editor?.chain().focus().toggleItalic().run()}>
+            Italic
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={() => editor?.chain().focus().toggleUnderline().run()}>
+            Underline
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={() => editor?.chain().focus().toggleHighlight().run()}>
+            Highlight
+          </DropdownMenuItem>
+
+          <DropdownMenuItem>
+            <input
+              type='color'
+              onChange={e =>
+                editor?.chain().focus().setColor(e.target.value).run()
+              }
+            />
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={() => editor?.chain().focus().unsetColor().run()}>
+            Clear Color
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* ✍️ Editor */}
       <div className='min-h-[200px] rounded-md border p-3'>
         <EditorContent editor={editor} />
+      </div>
+
+      {/* 📊 Character Count */}
+      <div className='text-sm text-gray-500 text-right'>
+        {editor?.storage.characterCount.characters()} characters
       </div>
 
       {/* Image */}
@@ -184,7 +288,9 @@ const Editor = () => {
             <button
               key={m}
               onClick={() => setMood(m)}
-              className={`rounded p-2 text-xl ${mood === m ? 'bg-gray-200' : ''}`}
+              className={`rounded p-2 text-xl ${
+                mood === m ? 'bg-gray-200' : ''
+              }`}
             >
               {m}
             </button>
