@@ -41,18 +41,14 @@ const Editor = () => {
   const [title, setTitle] = useState(existingEntry?.title || '')
   const [content, setContent] = useState(existingEntry?.content || '')
   const [mood, setMood] = useState(existingEntry?.mood || '😊')
-  const [category, setCategory] = useState(
-    existingEntry?.category || 'Personal'
-  )
-  const [image, setImage] = useState<string | null>(
-    existingEntry?.image || null
-  )
+  const [category, setCategory] = useState(existingEntry?.category || 'Personal')
+  const [image, setImage] = useState<string | null>(existingEntry?.image || null)
 
   const [locked, setLocked] = useState(existingEntry?.locked || false)
   const [pin, setPin] = useState('')
   const [hint, setHint] = useState(existingEntry?.hint || '')
 
-  // ✅ CLEAN EDITOR
+  // ✅ EDITOR
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -125,10 +121,9 @@ const Editor = () => {
         className='text-xl font-semibold'
       />
 
-      {/* ✨ PREMIUM TOOLBAR */}
+      {/* ✨ TOOLBAR */}
       <div className="flex items-center gap-2 rounded-xl border bg-gray-900 text-white px-3 py-2 shadow-sm">
 
-        {/* Bold */}
         <button
           title="Bold"
           onClick={() => editor?.chain().focus().toggleBold().run()}
@@ -139,7 +134,6 @@ const Editor = () => {
           <Bold size={18} />
         </button>
 
-        {/* Italic */}
         <button
           title="Italic"
           onClick={() => editor?.chain().focus().toggleItalic().run()}
@@ -150,7 +144,6 @@ const Editor = () => {
           <Italic size={18} />
         </button>
 
-        {/* Underline */}
         <button
           title="Underline"
           onClick={() => editor?.chain().focus().toggleUnderline().run()}
@@ -161,7 +154,6 @@ const Editor = () => {
           <UnderlineIcon size={18} />
         </button>
 
-        {/* Strike */}
         <button
           title="Strike"
           onClick={() => editor?.chain().focus().toggleStrike().run()}
@@ -172,7 +164,6 @@ const Editor = () => {
 
         <div className="w-px h-5 bg-gray-600" />
 
-        {/* Bullet List */}
         <button
           title="Bullet List"
           onClick={() => editor?.chain().focus().toggleBulletList().run()}
@@ -181,7 +172,6 @@ const Editor = () => {
           <List size={18} />
         </button>
 
-        {/* Numbered List */}
         <button
           title="Numbered List"
           onClick={() => editor?.chain().focus().toggleOrderedList().run()}
@@ -192,7 +182,6 @@ const Editor = () => {
 
         <div className="w-px h-5 bg-gray-600" />
 
-        {/* Highlight */}
         <button
           title="Highlight"
           onClick={() => editor?.chain().focus().toggleHighlight().run()}
@@ -201,31 +190,39 @@ const Editor = () => {
           <Highlighter size={18} />
         </button>
 
-        {/* 🎨 Color Picker */}
-    <label className="p-2 hover:bg-gray-700 rounded cursor-pointer">
-  <Palette size={18} />
-  <input
-    type="color"
-    className="hidden"
-    onChange={(e) => {
-      editor?.chain().focus().setColor(e.target.value).run()
+        {/* 🎨 COLOR PICKER */}
+        <label className="p-2 hover:bg-gray-700 rounded cursor-pointer">
+          <Palette size={18} />
+          <input
+            type="color"
+            className="hidden"
+            onChange={(e) => {
+              if (!editor) return
 
-      // 👇 THIS FIXES THE BLUE STICKING ISSUE
-      setTimeout(() => {
-        editor?.chain().focus().unsetColor().run()
-      }, 0)
-    }}
-  />
-</label>
+              const { from, to } = editor.state.selection
+
+              if (from === to) {
+                alert('Select text first')
+                return
+              }
+
+              editor.chain().focus().setColor(e.target.value).run()
+
+              setTimeout(() => {
+                editor.chain().focus().unsetColor().run()
+              }, 0)
+            }}
+          />
+        </label>
 
       </div>
 
       {/* ✍️ Editor */}
-      <div className="min-h-[250px] rounded-xl border text-black bg-white p-4 shadow-sm">
+      <div className="min-h-[250px] rounded-xl border bg-white text-black p-4 shadow-sm focus-within:ring-2 focus-within:ring-gray-400">
         <EditorContent editor={editor} />
       </div>
 
-      {/* 📊 Character Count */}
+      {/* Character Count */}
       <div className='text-sm text-gray-500 text-right'>
         {editor?.storage.characterCount.characters()} characters
       </div>
@@ -252,7 +249,7 @@ const Editor = () => {
         }}
       />
 
-      {/* 🔒 Lock */}
+      {/* Lock */}
       <Card>
         <CardContent className='space-y-3 p-4'>
           <label className='flex items-center gap-2'>
