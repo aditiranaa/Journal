@@ -1,16 +1,18 @@
-import {
-  NewspaperIcon
-} from 'lucide-react'
+import { NewspaperIcon } from 'lucide-react'
 import { Navigate, useRoutes } from 'react-router'
 import Layout from './components/layout'
 import { NavGroup } from './components/layout/types'
 import { useAuth } from './context/auth/authContext'
+
+// Pages
+import Landing from './features/journal/pages/Landing'
 import Login from './features/authentication/login'
 import Register from './features/authentication/register'
 import Dashboard from './features/journal/pages/Dashboard'
 import Editor from './features/journal/pages/Editor'
 import EntryView from './features/journal/pages/EntryView'
 
+/* ---------------- PRIVATE ROUTES ---------------- */
 const privateRoutes = [
   {
     path: '/',
@@ -31,7 +33,7 @@ const privateRoutes = [
             element: <Editor />
           },
           {
-            path: '/editor/:id', // edit mode
+            path: '/editor/:id',
             element: <Editor />
           },
           {
@@ -46,26 +48,38 @@ const privateRoutes = [
   }
 ]
 
-
-
-const publicRoutes = [
+/* ---------------- PUBLIC ROUTES ---------------- */
+const publicRoutes = (isAuthenticated: boolean) => [
   {
     path: '/',
+    element: isAuthenticated
+      ? <Navigate to="/dashboard" />   // ✅ redirect if logged in
+      : <Landing />                   // ✅ landing page
+  },
+  {
+    path: '/login',
     element: <Login />
   },
   {
     path: '/register',
     element: <Register />
-  },
-  { path: '*', element: <Navigate to='/' replace /> }
+  }
 ]
 
+/* ---------------- MENU ---------------- */
 export const DashboardMenu = (): NavGroup[] => {
   return privateRoutes[0].children as NavGroup[]
 }
 
+/* ---------------- ROUTES APP ---------------- */
 export const RoutesApp = () => {
   const { state: authState } = useAuth()
 
-  return useRoutes(authState.isAuthenticated ? privateRoutes : publicRoutes)
+  return useRoutes([
+    ...publicRoutes(authState.isAuthenticated),
+
+    ...(authState.isAuthenticated ? privateRoutes : []),
+
+    { path: '*', element: <Navigate to="/" replace /> }
+  ])
 }
