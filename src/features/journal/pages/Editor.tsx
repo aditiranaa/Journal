@@ -28,7 +28,7 @@ import CharacterCount from '@tiptap/extension-character-count'
 import Color from '@tiptap/extension-color'
 import { TextStyle } from '@tiptap/extension-text-style'
 
-const moods = ['😊', '😢', '😡', '😌', '🔥', '💭']
+
 const categories = ['Personal', 'Work', 'Ideas', 'Travel']
 
 const Editor = () => {
@@ -277,23 +277,6 @@ const Editor = () => {
               />
             </>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Mood */}
-      <Card>
-        <CardContent className='flex flex-wrap gap-2 p-4'>
-          {moods.map(m => (
-            <button
-              key={m}
-              onClick={() => setMood(m)}
-              className={`rounded p-2 text-xl ${
-                mood === m ? 'bg-gray-200' : ''
-              }`}
-            >
-              {m}
-            </button>
-          ))}
         </CardContent>
       </Card>
 
