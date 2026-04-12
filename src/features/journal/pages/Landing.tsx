@@ -17,13 +17,12 @@ const Landing = () => {
           🌿 Journal
         </h1>
 
-        <Button
-          variant="outline"
-          className="rounded-full px-6"
-          onClick={() => navigate("/login")}
-        >
-          Login
-        </Button>
+       <Button
+  variant="outline"
+  className="rounded-full px-6 bg-white/90 backdrop-blur-none text-black border border-gray-200 hover:bg-white"
+>
+  Login
+</Button>
       </div>
 
       {/* Hero */}
@@ -52,7 +51,7 @@ const Landing = () => {
           <Button
             size="lg"
             variant="outline"
-            className="rounded-full px-8"
+            className="rounded-full px-8 bg-black text-white hover:bg-gray-800 transition-all"            
             onClick={() => navigate("/register")}
           >
             Create Account
