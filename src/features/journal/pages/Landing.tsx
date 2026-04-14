@@ -19,8 +19,7 @@ const Landing = () => {
 
        <Button
   variant="outline"
-  className="rounded-full px-6 bg-white/90 backdrop-blur-none text-black border border-gray-200 hover:bg-white"
->
+  className="rounded-full px-6 bg-white/90 backdrop-blur-none text-black border border-gray-200 hover:bg-white" >
   Login
 </Button>
       </div>
