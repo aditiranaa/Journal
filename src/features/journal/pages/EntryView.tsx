@@ -1,201 +1,75 @@
-import { useNavigate, useParams } from "react-router-dom"
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { useJournal } from "@/context/journal-context"
-import { decrypt, hashPin } from "@/utils/crypto"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogTrigger
-} from "@/components/ui/dialog"
-
-const EntryView = () => {
-  const navigate = useNavigate()
-  const { id } = useParams()
-  const { entries, deleteEntry } = useJournal()
-
-  const entry = entries.find((e) => e.id === Number(id || 0))
-
-  // 🔐 HOOKS MUST BE HERE (always run)
-// 🔐 hooks (ALWAYS first)
-const [pinInput, setPinInput] = useState("")
-const [unlocked, setUnlocked] = useState(false)
-const [decrypted, setDecrypted] = useState("")
-const [attempts, setAttempts] = useState(0)
-
-// ✅ useEffects MUST be here too
-useEffect(() => {
-  if (!entry) return
-
-  const cached = sessionStorage.getItem(`unlocked-${entry.id}`)
-  if (cached) setUnlocked(true)
-}, [entry])
-
-useEffect(() => {
-  if (!entry) return
-
-  return () => {
-    sessionStorage.removeItem(`unlocked-${entry.id}`)
-  }
-}, [entry])
-
-// ⛔ AFTER ALL HOOKS
-if (!entry) return <div>Entry not found</div>
-
-  // 🔓 UNLOCK HANDLER
-  const handleUnlock = () => {
-    if (attempts >= 3) {
-      alert("Too many attempts. Try later.")
-      return
-    }
-
-   if (!entry.pinHash || hashPin(pinInput) !== entry.pinHash) {
-  setAttempts((a) => a + 1)
-  alert("Wrong PIN")
-  return
-  }
-
-  if (!entry.encryptedContent) {
-  alert("No encrypted content found")
-  return
-  }
-
-const result = decrypt(entry.encryptedContent, pinInput)
-    if (!result) {
-      alert("Decryption failed")
-      return
-    }
-
-    setDecrypted(result)
-    setUnlocked(true)
-
-    sessionStorage.setItem(`unlocked-${entry.id}`, "true")
-  }
-
-  const isLocked = entry.locked && !unlocked
+import { motion } from "framer-motion"
+import { useNavigate } from "react-router-dom"
+type Entry = {
+  id: number
+  title: string
+  content: string
+  mood: string
+  category: string
+  locked?: boolean
+  image?: string
+}
+    const EntryCard = ({ entry }: { entry: Entry }) => {
+    const navigate = useNavigate()
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
+    <motion.div
+      whileHover={{ scale: 1.04, y: -6 }}
+      transition={{ type: "spring", stiffness: 200 }}
+      onClick={() => navigate(`/entry/${entry.id}`)}
+      className="
+        group relative overflow-hidden rounded-2xl
+        bg-white/10 backdrop-blur-xl border border-white/20
+        shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)]
+        cursor-pointer
+      "
+    >
 
-      {/* Top Actions */}
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={() => navigate("/dashboard")}>
-          ← Back
-        </Button>
+      {/* 🖼️ IMAGE */}
+      {entry.image && (
+        <div className="h-40 overflow-hidden">
+          <img
+            src={entry.image}
+            alt=""
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        </div>
+      )}
 
-        <div className="flex gap-2">
-          <Button
-            disabled={entry.locked && !unlocked}
-            onClick={() => navigate(`/editor/${entry.id}`)}
-          >
-            Edit
-          </Button>
+      {/* 🔒 LOCK OVERLAY */}
+      {entry.locked && (
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center text-white text-lg font-semibold z-10">
+          🔒 Locked
+        </div>
+      )}
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="destructive">Delete</Button>
-            </DialogTrigger>
+      {/* 📄 CONTENT */}
+      <div className="p-5 space-y-3">
 
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Delete Entry?</DialogTitle>
-              </DialogHeader>
+        <h2 className="text-lg font-semibold text-white line-clamp-1">
+          {entry.title}
+        </h2>
 
-              <p className="text-sm text-gray-500">
-                Are you sure you want to delete this entry? This action cannot be undone.
-              </p>
+        {!entry.locked && (
+          <p className="text-sm text-white/70 line-clamp-3">
+            {entry.content.replace(/<[^>]+>/g, "")}
+          </p>
+        )}
 
-              <DialogFooter>
-                <Button variant="outline">Cancel</Button>
+        <div className="flex items-center justify-between text-xs text-white/60 pt-2">
+          <span className="text-lg">{entry.mood}</span>
 
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    deleteEntry(entry.id)
-                    navigate("/dashboard")
-                  }}
-                >
-                  Yes, Delete
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <span className="px-2 py-1 rounded-full bg-white/20 backdrop-blur">
+            {entry.category}
+          </span>
         </div>
       </div>
 
-      {/* Entry Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">
-            {entry.title} {entry.locked && "🔒"}
-          </CardTitle>
-        </CardHeader>
+      {/* ✨ HOVER GLOW */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-300 pointer-events-none shadow-[0_0_60px_rgba(255,255,255,0.15)]" />
 
-        <CardContent className="space-y-4">
-
-          {/* Meta */}
-          <div className="flex gap-4 text-sm text-gray-500">
-            <span>{entry.mood}</span>
-            <span>{entry.category}</span>
-            <span>{entry.date}</span>
-          </div>
-
-          {/* 🔒 LOCKED VIEW */}
-          {isLocked ? (
-            <div className="space-y-3">
-
-              <p>🔒 This entry is locked</p>
-
-              {/* Hint */}
-              {entry.hint && (
-                <p className="text-sm text-gray-400">
-                  Hint: {entry.hint}
-                </p>
-              )}
-
-              <input
-                type="password"
-                placeholder="Enter PIN"
-                value={pinInput}
-                onChange={(e) => setPinInput(e.target.value)}
-                className="border p-2 rounded w-full"
-              />
-
-              <Button onClick={handleUnlock}>
-                Unlock
-              </Button>
-
-            </div>
-          ) : (
-            <>
-              {/* CONTENT */}
-              <div
-              className="prose max-w-none"
-              dangerouslySetInnerHTML={{
-               __html: entry.locked ? decrypted : entry.content
-             }}
-/>
-
-              {/* IMAGE */}
-              {entry.image && (
-                <img
-                  src={entry.image}
-                  alt="entry"
-                  className="rounded-md max-h-[300px] object-cover"
-                />
-              )}
-            </>
-          )}
-
-        </CardContent>
-      </Card>
-
-    </div>
+    </motion.div>
   )
 }
 
-export default EntryView 
+export default EntryCard

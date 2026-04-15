@@ -2,68 +2,73 @@ import { Button } from "@/components/ui/button"
 import EntryCard from "../components/EntryCard"
 import { useNavigate } from "react-router-dom"
 import { useJournal } from "@/context/journal-context"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { useTheme } from "@/context/theme-context"
+import { motion, AnimatePresence } from "framer-motion"
 
-/* 🎨 THEME SETTINGS PANEL */
-const ThemeSettings = () => {
-  const { setTheme, setFont, setWallpaper } = useTheme()
-   
+/* ✅ Props */
+type ThemeSettingsProps = {
+  blur: number
+  setBlur: (value: number) => void
+  sound: string
+  setSound: (value: string) => void
+}
+
+/* 🎨 SETTINGS */
+const ThemeSettings = ({
+  blur,
+  setBlur,
+  sound,
+  setSound,
+}: ThemeSettingsProps) => {
+  const { setTheme, setFont } = useTheme()
+
   return (
-    <div className="p-4 border rounded-xl shadow-sm space-y-4 bg-white/50 backdrop-blur">
+    <div className="p-4 rounded-2xl space-y-4 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+      <h2 className="font-semibold text-lg text-white">🎨 Appearance</h2>
 
-      <h2 className="font-semibold text-lg">🎨 Appearance</h2>
-
-      {/* THEMES */}
+      {/* Blur */}
       <div>
-        <p className="text-sm mb-2">Theme</p>
+        <p className="text-sm text-white/80 mb-2">Blur</p>
+        <input
+          type="range"
+          min="0"
+          max="30"
+          value={blur}
+          onChange={(e) => setBlur(Number(e.target.value))}
+          className="w-full"
+        />
+      </div>
+
+      {/* Sound */}
+      <div>
+        <p className="text-sm text-white/80 mb-2">Sound</p>
+        <div className="flex gap-2">
+          <Button variant={sound === "rain" ? "default" : "outline"} onClick={() => setSound("rain")}>🌧️ Rain</Button>
+          <Button variant={sound === "cafe" ? "default" : "outline"} onClick={() => setSound("cafe")}>☕ Cafe</Button>
+          <Button variant={sound === "none" ? "default" : "outline"} onClick={() => setSound("none")}>🔇 Off</Button>
+        </div>
+      </div>
+
+      {/* Theme */}
+      <div>
+        <p className="text-sm mb-2 text-white/80">Theme</p>
         <div className="flex gap-2">
           <Button onClick={() => setTheme("light")}>Light</Button>
           <Button onClick={() => setTheme("dark")}>Dark</Button>
         </div>
       </div>
 
-      {/* FONTS */}
+      {/* Font */}
       <div>
-        <p className="text-sm mb-2">Font</p>
+        <p className="text-sm mb-2 text-white/80">Font</p>
         <div className="flex gap-2">
           <Button onClick={() => setFont("sans")}>Sans</Button>
           <Button onClick={() => setFont("serif")}>Serif</Button>
           <Button onClick={() => setFont("mono")}>Mono</Button>
         </div>
       </div>
-
-      {/* WALLPAPERS */}
-      <div>
-        <p className="text-sm mb-2">Wallpaper</p>
-        <div className="flex gap-2 flex-wrap">
-
-          <Button variant="outline" onClick={() => setWallpaper(null)}>
-            None
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={() =>
-              setWallpaper("https://images.unsplash.com/photo-1501785888041-af3ef285b470")
-            }
-          >
-            🌿 Nature
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={() =>
-              setWallpaper("https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d")
-            }
-          >
-            🧘 Minimal
-          </Button>
-
-        </div>
-      </div>
-
     </div>
   )
 }
@@ -78,99 +83,177 @@ const Dashboard = () => {
   const [mood, setMood] = useState("All")
   const [showLocked, setShowLocked] = useState(true)
 
+  const [blur, setBlur] = useState(15)
+  const [sound, setSound] = useState("none")
+
+  /* 🎬 Mood Videos */
+  const moodVideos: Record<string, string> = {
+    "😊": "/videos/happy.mp4",
+    "😢": "/videos/rain.mp4",
+    "🔥": "/videos/neon.mp4",
+    "😌": "/videos/calm.mp4",
+  }
+
+  const currentMood = entries[0]?.mood ?? "😊"
+
+  const [videoSrc, setVideoSrc] = useState(moodVideos[currentMood])
+  const [fade, setFade] = useState(true)
+
+  /* 🎬 Smooth video transition */
+  useEffect(() => {
+    const newVideo = moodVideos[currentMood] || "/videos/calm.mp4"
+
+    if (newVideo !== videoSrc) {
+      setFade(false)
+      setTimeout(() => {
+        setVideoSrc(newVideo)
+        setFade(true)
+      }, 400)
+    }
+  }, [currentMood])
+
+  /* 🎵 Ambient Sound */
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.pause()
+
+    if (sound === "none") return
+
+    const audio = new Audio(
+      sound === "rain" ? "/sounds/rain.mp3" : "/sounds/cafe.mp3"
+    )
+
+    audio.loop = true
+    audio.volume = 0.4
+    audio.play()
+
+    audioRef.current = audio
+
+    return () => audio.pause()
+  }, [sound])
+
+  /* 🔍 Filter */
   const filteredEntries = entries.filter((entry) => {
-    const matchesSearch =
-      entry.title.toLowerCase().includes(search.toLowerCase()) ||
-      (!entry.locked &&
-        entry.content.toLowerCase().includes(search.toLowerCase()))
-
-    const matchesCategory =
-      category === "All" || entry.category === category
-
-    const matchesMood =
-      mood === "All" || entry.mood === mood
-
-    const matchesLocked =
-      showLocked || !entry.locked
-
-    return matchesSearch && matchesCategory && matchesMood && matchesLocked
+    return (
+      (entry.title.toLowerCase().includes(search.toLowerCase()) ||
+        (!entry.locked &&
+          entry.content.toLowerCase().includes(search.toLowerCase()))) &&
+      (category === "All" || entry.category === category) &&
+      (mood === "All" || entry.mood === mood) &&
+      (showLocked || !entry.locked)
+    )
   })
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen text-white relative overflow-hidden">
 
-      {/* 🎨 THEME PANEL */}
-      <ThemeSettings />
+      {/* 🎬 VIDEO */}
+      <AnimatePresence mode="wait">
+        {fade && (
+          <motion.video
+            key={videoSrc}
+            autoPlay
+            loop
+            muted
+            playsInline
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1 }}
+            style={{ filter: `blur(${blur}px)` }}
+            className="fixed top-0 left-0 w-full h-full object-cover -z-20"
+          >
+            <source src={videoSrc} type="video/mp4" />
+          </motion.video>
+        )}
+      </AnimatePresence>
 
-      {/* 🔍 Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="fixed inset-0 bg-black/40 -z-10" />
 
-        <Input
-          placeholder="Search entries..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      {/* CONTENT */}
+      <div className="relative z-10 max-w-6xl mx-auto p-6 space-y-10">
 
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="p-2 border rounded-md"
-        >
-          <option>All</option>
-          <option>Personal</option>
-          <option>Work</option>
-          <option>Ideas</option>
-          <option>Travel</option>
-        </select>
+  {/* 🎨 SETTINGS CARD */}
+  <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-5 shadow-xl">
+    <ThemeSettings
+      blur={blur}
+      setBlur={setBlur}
+      sound={sound}
+      setSound={setSound}
+    />
+  </div>
 
-        <select
-          value={mood}
-          onChange={(e) => setMood(e.target.value)}
-          className="p-2 border rounded-md"
-        >
-          <option>All</option>
-          <option>😊</option>
-          <option>😢</option>
-          <option>😡</option>
-          <option>😌</option>
-          <option>🔥</option>
-          <option>💭</option>
-        </select>
+  {/* 🔍 FILTER BAR (UPGRADED) */}
+  <div className="
+    flex flex-col md:flex-row gap-4
+    bg-white/10 backdrop-blur-xl border border-white/20
+    rounded-2xl p-4 shadow-lg
+  ">
 
-        {/* 🔒 Toggle */}
-        <Button
-          variant="outline"
-          onClick={() => setShowLocked((prev) => !prev)}
-        >
-          {showLocked ? "Hide Locked 🔒" : "Show Locked 🔓"}
-        </Button>
+    {/* Search */}
+    <Input
+      placeholder="Search your thoughts..."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      className="bg-white/20 border-none focus:ring-2 focus:ring-white/40"
+    />
 
+    {/* Category */}
+    <select
+      value={category}
+      onChange={(e) => setCategory(e.target.value)}
+      className="p-2 rounded-lg bg-white/20 backdrop-blur border border-white/20 text-white"
+    >
+      <option className="text-black">All</option>
+      <option className="text-black">Personal</option>
+      <option className="text-black">Work</option>
+    </select>
+
+    {/* Mood */}
+    <select
+      value={mood}
+      onChange={(e) => setMood(e.target.value)}
+      className="p-2 rounded-lg bg-white/20 backdrop-blur border border-white/20 text-white"
+    >
+      <option className="text-black">All</option>
+      <option className="text-black">😊</option>
+      <option className="text-black">😢</option>
+      <option className="text-black">🔥</option>
+    </select>
+
+    {/* 🔒 Toggle */}
+    <Button
+      variant="outline"
+      className="border-white/30 text-white hover:bg-white/20"
+      onClick={() => setShowLocked((prev) => !prev)}
+    >
+      {showLocked ? "Hide Locked 🔒" : "Show Locked 🔓"}
+    </Button>
+
+  </div>
+
+</div>
+
+        {/* Header */}
+        <div className="flex justify-between">
+          <h1 className="text-2xl font-bold">Your Journal</h1>
+          <Button onClick={() => navigate("/editor")}>+ New Entry</Button>
+        </div>
+
+        {/* Entries */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredEntries.map((entry) => (
+            <motion.div
+              key={entry.id}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-4 shadow-xl"
+            >
+              <EntryCard entry={entry} />
+            </motion.div>
+          ))}
+        </div>
       </div>
-
-      {/* 📌 Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Your Journal</h1>
-
-        <Button onClick={() => navigate("/editor")}>
-          + New Entry
-        </Button>
-      </div>
-
-      {/* 🧾 Entries */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredEntries.map((entry) => (
-          <EntryCard key={entry.id} entry={entry} />
-        ))}
-      </div>
-
-      {/* 🚫 Empty state */}
-      {filteredEntries.length === 0 && (
-        <p className="text-center text-gray-400 mt-10">
-          No entries found
-        </p>
-      )}
-
-    </div>
   )
 }
 

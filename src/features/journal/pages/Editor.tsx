@@ -218,8 +218,7 @@ const Editor = () => {
       </div>
 
       {/* ✍️ Editor */}
-      <div className="min-h-[250px] rounded-xl border bg-white text-black p-4 shadow-sm focus-within:ring-2 focus-within:ring-gray-400">
-        <EditorContent editor={editor} />
+      <div className="min-h-[250px] rounded-2xl bg-white/90 backdrop-blur-xl p-4 shadow-xl focus-within:ring-2 focus-within:ring-black/40">        <EditorContent editor={editor} />
       </div>
 
       {/* Character Count */}
