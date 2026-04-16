@@ -19,8 +19,7 @@ type ThemeSettingsProps = {
 const ThemeSettings = ({
   blur,
   setBlur,
-  sound,
-  setSound,
+  
 }: ThemeSettingsProps) => {
   const { setTheme, setFont } = useTheme()
 
@@ -41,15 +40,7 @@ const ThemeSettings = ({
         />
       </div>
 
-      {/* Sound */}
-      <div>
-        <p className="text-sm text-white/80 mb-2">Sound</p>
-        <div className="flex gap-2">
-          <Button variant={sound === "rain" ? "default" : "outline"} onClick={() => setSound("rain")}>🌧️ Rain</Button>
-          <Button variant={sound === "cafe" ? "default" : "outline"} onClick={() => setSound("cafe")}>☕ Cafe</Button>
-          <Button variant={sound === "none" ? "default" : "outline"} onClick={() => setSound("none")}>🔇 Off</Button>
-        </div>
-      </div>
+     
 
       {/* Theme */}
       <div>
