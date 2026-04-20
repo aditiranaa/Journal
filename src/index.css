@@ -170,6 +170,21 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.ProseMirror {
+  min-height: 200px;
+  outline: none;
+  cursor: text;
+  color: black;
+  caret-color: black; /* 🔥 THIS MAKES CURSOR VISIBLE */
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
+
+.ProseMirror p {
+  margin: 0;
+}
 
 @layer utilities {
   /* Hide scrollbar for Chrome, Safari and Opera */

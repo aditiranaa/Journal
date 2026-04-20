@@ -51,23 +51,22 @@ const Editor = () => {
   // ✅ EDITOR
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Highlight,
-      Underline,
-      TextStyle,
-      Color,
-      CharacterCount.configure({
-        limit: 5000,
-      }),
-      Placeholder.configure({
-        placeholder: 'Start writing your thoughts...',
-      }),
-    ],
-    content: content,
-    onUpdate: ({ editor }) => {
-      setContent(editor.getHTML())
-    },
-  })
+    StarterKit,
+    Highlight,
+    Underline,
+    TextStyle,
+    Color,
+    CharacterCount.configure({ limit: 5000 }),
+    Placeholder.configure({
+      placeholder: 'Start writing your thoughts...',
+    }),
+      ],
+  content: content,
+  autofocus: true, // ✅ ADD THIS
+  onUpdate: ({ editor }) => {
+    setContent(editor.getHTML())
+      },
+    })
 
   useEffect(() => {
     if (existingEntry) {
@@ -218,9 +217,19 @@ const Editor = () => {
       </div>
 
       {/* ✍️ Editor */}
-      <div className="min-h-[250px] rounded-2xl bg-white/90 backdrop-blur-xl p-4 shadow-xl focus-within:ring-2 focus-within:ring-black/40">        <EditorContent editor={editor} />
-      </div>
-
+    <div
+  className="
+    min-h-[300px]
+    rounded-2xl
+    bg-white
+    p-4
+    shadow-xl
+    border border-gray-300
+  "
+  onClick={() => editor?.chain().focus().run()} // 🔥 FORCE CLICK TO FOCUS
+>
+  {editor && <EditorContent editor={editor} />}
+</div>
       {/* Character Count */}
       <div className='text-sm text-gray-500 text-right'>
         {editor?.storage.characterCount.characters()} characters
