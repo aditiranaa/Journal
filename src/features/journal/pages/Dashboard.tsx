@@ -2,63 +2,39 @@ import { Button } from "@/components/ui/button"
 import EntryCard from "../components/EntryCard"
 import { useNavigate } from "react-router-dom"
 import { useJournal } from "@/context/journal-context"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { useTheme } from "@/context/theme-context"
 import { motion, AnimatePresence } from "framer-motion"
-
-/* ✅ Props */
-type ThemeSettingsProps = {
-  blur: number
-  setBlur: (value: number) => void
-  sound: string
-  setSound: (value: string) => void
-}
+import {
+  PieChart, Pie, Cell, Tooltip, ResponsiveContainer
+} from "recharts"
 
 /* 🎨 SETTINGS */
-const ThemeSettings = ({
-  blur,
-  setBlur,
-  
-}: ThemeSettingsProps) => {
+const ThemeSettings = ({ blur, setBlur }: { blur: number; setBlur: (v: number) => void }) => {
   const { setTheme, setFont } = useTheme()
 
   return (
-    <div className="p-4 rounded-2xl space-y-4 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
-      <h2 className="font-semibold text-lg text-white">🎨 Appearance</h2>
+    <div className="p-5 rounded-2xl space-y-4 bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+      <h2 className="font-semibold text-lg text-gray-800 dark:text-white">🎨 Appearance</h2>
 
-      {/* Blur */}
-      <div>
-        <p className="text-sm text-white/80 mb-2">Blur</p>
-        <input
-          type="range"
-          min="0"
-          max="30"
-          value={blur}
-          onChange={(e) => setBlur(Number(e.target.value))}
-          className="w-full"
-        />
+      <input
+        type="range"
+        min="0"
+        max="30"
+        value={blur}
+        onChange={(e) => setBlur(Number(e.target.value))}
+      />
+
+      <div className="flex gap-2">
+        <Button onClick={() => setTheme("light")}>Light</Button>
+        <Button onClick={() => setTheme("dark")}>Dark</Button>
       </div>
 
-     
-
-      {/* Theme */}
-      <div>
-        <p className="text-sm mb-2 text-white/80">Theme</p>
-        <div className="flex gap-2">
-          <Button onClick={() => setTheme("light")}>Light</Button>
-          <Button onClick={() => setTheme("dark")}>Dark</Button>
-        </div>
-      </div>
-
-      {/* Font */}
-      <div>
-        <p className="text-sm mb-2 text-white/80">Font</p>
-        <div className="flex gap-2">
-          <Button onClick={() => setFont("sans")}>Sans</Button>
-          <Button onClick={() => setFont("serif")}>Serif</Button>
-          <Button onClick={() => setFont("mono")}>Mono</Button>
-        </div>
+      <div className="flex gap-2">
+        <Button onClick={() => setFont("sans")}>Sans</Button>
+        <Button onClick={() => setFont("serif")}>Serif</Button>
+        <Button onClick={() => setFont("mono")}>Mono</Button>
       </div>
     </div>
   )
@@ -73,11 +49,9 @@ const Dashboard = () => {
   const [category, setCategory] = useState("All")
   const [mood, setMood] = useState("All")
   const [showLocked, setShowLocked] = useState(true)
-
   const [blur, setBlur] = useState(15)
-  const [sound, setSound] = useState("none")
 
-  /* 🎬 Mood Videos */
+  /* 🎬 Background */
   const moodVideos: Record<string, string> = {
     "😊": "/videos/happy.mp4",
     "😢": "/videos/rain.mp4",
@@ -86,11 +60,9 @@ const Dashboard = () => {
   }
 
   const currentMood = entries[0]?.mood ?? "😊"
-
   const [videoSrc, setVideoSrc] = useState(moodVideos[currentMood])
   const [fade, setFade] = useState(true)
 
-  /* 🎬 Smooth video transition */
   useEffect(() => {
     const newVideo = moodVideos[currentMood] || "/videos/calm.mp4"
 
@@ -101,30 +73,52 @@ const Dashboard = () => {
         setFade(true)
       }, 400)
     }
-  }, [currentMood])
+  }, [currentMood, videoSrc])
 
-  /* 🎵 Ambient Sound */
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  /* 📊 ANALYTICS */
 
-  useEffect(() => {
-    if (audioRef.current) audioRef.current.pause()
+  const streak = (() => {
+    if (!entries?.length) return { current: 0, longest: 0 }
 
-    if (sound === "none") return
+    const dates = entries
+      .map(e => new Date(e.date).toDateString())
+      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
 
-    const audio = new Audio(
-      sound === "rain" ? "/sounds/rain.mp3" : "/sounds/cafe.mp3"
-    )
+    let current = 1
+    let longest = 1
 
-    audio.loop = true
-    audio.volume = 0.4
-    audio.play()
+    for (let i = 1; i < dates.length; i++) {
+      const diff =
+        (new Date(dates[i]).getTime() - new Date(dates[i - 1]).getTime()) /
+        (1000 * 60 * 60 * 24)
 
-    audioRef.current = audio
+      if (diff === 1) {
+        current++
+        longest = Math.max(longest, current)
+      } else if (diff > 1) {
+        current = 1
+      }
+    }
 
-    return () => audio.pause()
-  }, [sound])
+    return { current, longest }
+  })()
 
-  /* 🔍 Filter */
+  const moodStats = entries.reduce<Record<string, number>>((acc, e) => {
+    if (!e.mood) return acc
+    acc[e.mood] = (acc[e.mood] || 0) + 1
+    return acc
+  }, {})
+
+  const moodData = Object.entries(moodStats).map(([name, value]) => ({
+    name,
+    value
+  }))
+
+  const monthlyEntries = entries.filter(
+    e => new Date(e.date).getMonth() === new Date().getMonth()
+  )
+
+  /* 🔍 FILTER (ORIGINAL LOGIC PRESERVED) */
   const filteredEntries = entries.filter((entry) => {
     return (
       (entry.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -137,7 +131,18 @@ const Dashboard = () => {
   })
 
   return (
-    <div className="min-h-screen text-white relative overflow-hidden">
+    <div className="min-h-screen text-gray-900 dark:text-white">
+
+      {/* 🌄 Background */}
+      <div
+        className="fixed inset-0 -z-20 bg-cover"
+        style={{
+          backgroundImage:
+            'url("https://images.unsplash.com/photo-1506744038136-46273834b3fb")',
+        }}
+      />
+
+      <div className="fixed inset-0 bg-black/40 dark:bg-black/60 -z-10" />
 
       {/* 🎬 VIDEO */}
       <AnimatePresence mode="wait">
@@ -153,98 +158,106 @@ const Dashboard = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 1 }}
             style={{ filter: `blur(${blur}px)` }}
-            className="fixed top-0 left-0 w-full h-full object-cover -z-20"
+            className="fixed inset-0 w-full h-full object-cover -z-20"
           >
             <source src={videoSrc} type="video/mp4" />
           </motion.video>
         )}
       </AnimatePresence>
 
-      <div className="fixed inset-0 bg-black/40 -z-10" />
+      {/* 🧭 SIDEBAR */}
+      <div className="fixed left-0 top-0 h-full w-64 p-5 bg-white/70 dark:bg-black/40 backdrop-blur-xl border-r border-white/20">
+        <h2 className="text-xl font-bold mb-6">Journal</h2>
 
-      {/* CONTENT */}
-      <div className="relative z-10 max-w-6xl mx-auto p-6 space-y-10">
-
-  {/* 🎨 SETTINGS CARD */}
-  <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-5 shadow-xl">
-    <ThemeSettings
-      blur={blur}
-      setBlur={setBlur}
-      sound={sound}
-      setSound={setSound}
-    />
-  </div>
-
-  {/* 🔍 FILTER BAR (UPGRADED) */}
-  <div className="
-    flex flex-col md:flex-row gap-4
-    bg-white/10 backdrop-blur-xl border border-white/20
-    rounded-2xl p-4 shadow-lg
-  ">
-
-    {/* Search */}
-    <Input
-      placeholder="Search your thoughts..."
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      className="bg-white/20 border-none focus:ring-2 focus:ring-white/40"
-    />
-
-    {/* Category */}
-    <select
-      value={category}
-      onChange={(e) => setCategory(e.target.value)}
-      className="p-2 rounded-lg bg-white/20 backdrop-blur border border-white/20 text-white"
-    >
-      <option className="text-black">All</option>
-      <option className="text-black">Personal</option>
-      <option className="text-black">Work</option>
-    </select>
-
-    {/* Mood */}
-    <select
-      value={mood}
-      onChange={(e) => setMood(e.target.value)}
-      className="p-2 rounded-lg bg-white/20 backdrop-blur border border-white/20 text-white"
-    >
-      <option className="text-black">All</option>
-      <option className="text-black">😊</option>
-      <option className="text-black">😢</option>
-      <option className="text-black">🔥</option>
-    </select>
-
-    {/* 🔒 Toggle */}
-    <Button
-      variant="outline"
-      className="border-white/30 text-white hover:bg-white/20"
-      onClick={() => setShowLocked((prev) => !prev)}
-    >
-      {showLocked ? "Hide Locked 🔒" : "Show Locked 🔓"}
-    </Button>
-
-  </div>
-
-</div>
-
-        {/* Header */}
-        <div className="flex justify-between">
-          <h1 className="text-2xl font-bold">Your Journal</h1>
-          <Button onClick={() => navigate("/editor")}>+ New Entry</Button>
-        </div>
-
-        {/* Entries */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEntries.map((entry) => (
-            <motion.div
-              key={entry.id}
-              whileHover={{ scale: 1.05, y: -5 }}
-              className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-4 shadow-xl"
-            >
-              <EntryCard entry={entry} />
-            </motion.div>
-          ))}
+        <div className="flex flex-col gap-3">
+          <Button onClick={() => navigate("/editor")}>✍️ New Entry</Button>
+          <Button onClick={() => setShowLocked(true)}>🔒 View Locked</Button>
+          <Button onClick={() => setShowLocked(false)}>🙈 Hide Locked</Button>
         </div>
       </div>
+
+      {/* CONTENT */}
+      <div className="ml-64 p-8 space-y-8">
+
+        <ThemeSettings blur={blur} setBlur={setBlur} />
+
+        {/* 📊 STATS */}
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl shadow-xl">
+            <p className="text-sm opacity-70">Streak</p>
+            <h2 className="text-3xl font-bold">{streak.current} 🔥</h2>
+            <p className="text-xs">Longest: {streak.longest}</p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl shadow-xl">
+            <p className="text-sm">Monthly Entries</p>
+            <h2 className="text-3xl font-bold">{monthlyEntries.length}</h2>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl shadow-xl">
+            <p className="text-sm">Top Mood</p>
+            <h2 className="text-3xl">
+              {Object.entries(moodStats).sort((a, b) => b[1] - a[1])[0]?.[0] || "😊"}
+            </h2>
+          </div>
+        </div>
+
+        {/* 📈 GRAPH */}
+        {moodData.length > 0 && (
+          <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl shadow-xl">
+            <h2 className="mb-4 font-semibold">Mood Distribution</h2>
+
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie data={moodData} dataKey="value" outerRadius={80}>
+                  {moodData.map((_, i) => <Cell key={i} />)}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* 🔍 FILTER BAR */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <Input
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-white/60 dark:bg-white/10 backdrop-blur-md"
+          />
+
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="p-2 rounded-lg bg-white/20"
+          >
+            <option>All</option>
+            <option>Personal</option>
+            <option>Work</option>
+          </select>
+
+          <select
+            value={mood}
+            onChange={(e) => setMood(e.target.value)}
+            className="p-2 rounded-lg bg-white/20"
+          >
+            <option>All</option>
+            <option>😊</option>
+            <option>😢</option>
+            <option>🔥</option>
+          </select>
+        </div>
+
+        {/* 📚 ENTRIES */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredEntries.map((entry) => (
+            <EntryCard key={entry.id} entry={entry} />
+          ))}
+        </div>
+
+      </div>
+    </div>
   )
 }
 

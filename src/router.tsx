@@ -13,6 +13,7 @@ import Editor from './features/journal/pages/Editor'
 import EntryView from './features/journal/pages/EntryView'
 
 /* ---------------- PRIVATE ROUTES ---------------- */
+
 const privateRoutes = [
   {
     path: '/',
@@ -40,7 +41,7 @@ const privateRoutes = [
             hide: true,
             title: 'Entry View',
             path: '/entry/:id',
-            element: <EntryView />
+            element: <EntryView /> // ✅ stays like this
           }
         ]
       }
@@ -49,12 +50,13 @@ const privateRoutes = [
 ]
 
 /* ---------------- PUBLIC ROUTES ---------------- */
+
 const publicRoutes = (isAuthenticated: boolean) => [
   {
     path: '/',
     element: isAuthenticated
-      ? <Navigate to="/dashboard" />   // ✅ redirect if logged in
-      : <Landing />                   // ✅ landing page
+      ? <Navigate to="/dashboard" />
+      : <Landing />
   },
   {
     path: '/login',
@@ -67,19 +69,19 @@ const publicRoutes = (isAuthenticated: boolean) => [
 ]
 
 /* ---------------- MENU ---------------- */
+
 export const DashboardMenu = (): NavGroup[] => {
   return privateRoutes[0].children as NavGroup[]
 }
 
 /* ---------------- ROUTES APP ---------------- */
+
 export const RoutesApp = () => {
   const { state: authState } = useAuth()
 
   return useRoutes([
     ...publicRoutes(authState.isAuthenticated),
-
     ...(authState.isAuthenticated ? privateRoutes : []),
-
     { path: '*', element: <Navigate to="/" replace /> }
   ])
 }
