@@ -47,7 +47,6 @@ const Dashboard = () => {
 
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("All")
-  const [mood, setMood] = useState("All")
   const [showLocked, setShowLocked] = useState(true)
   const [blur, setBlur] = useState(15)
 
@@ -124,7 +123,6 @@ const Dashboard = () => {
         (!entry.locked &&
           entry.content.toLowerCase().includes(search.toLowerCase()))) &&
       (category === "All" || entry.category === category) &&
-      (mood === "All" || entry.mood === mood) &&
       (showLocked || !entry.locked)
     )
   })
@@ -222,12 +220,6 @@ const Dashboard = () => {
             <option>Work</option>
           </select>
 
-          <select value={mood} onChange={(e) => setMood(e.target.value)}>
-            <option>All</option>
-            <option>😊</option>
-            <option>😢</option>
-            <option>🔥</option>
-          </select>
         </div>
 
         {/* Entries */}
