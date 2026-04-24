@@ -11,12 +11,20 @@ import {
 } from "recharts"
 
 /* 🎨 SETTINGS */
-const ThemeSettings = ({ blur, setBlur }: { blur: number; setBlur: (v: number) => void }) => {
+const ThemeSettings = ({
+  blur,
+  setBlur,
+}: {
+  blur: number
+  setBlur: (v: number) => void
+}) => {
   const { setTheme, setFont } = useTheme()
 
   return (
     <div className="w-full p-5 rounded-2xl space-y-4 bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
-      <h2 className="font-semibold text-lg text-gray-800 dark:text-white">🎨 Appearance</h2>
+      <h2 className="font-semibold text-lg text-gray-800 dark:text-white">
+        🎨 Appearance
+      </h2>
 
       <input
         type="range"
@@ -47,6 +55,7 @@ const Dashboard = () => {
 
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("All")
+  const [mood, setMood] = useState("All")
   const [showLocked, setShowLocked] = useState(true)
   const [blur, setBlur] = useState(15)
 
@@ -64,7 +73,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     const newVideo = moodVideos[currentMood] || "/videos/calm.mp4"
-
     if (newVideo !== videoSrc) {
       setFade(false)
       setTimeout(() => {
@@ -75,11 +83,12 @@ const Dashboard = () => {
   }, [currentMood, videoSrc])
 
   /* 📊 ANALYTICS */
+
   const streak = (() => {
     if (!entries?.length) return { current: 0, longest: 0 }
 
     const dates = entries
-      .map(e => new Date(e.date).toDateString())
+      .map((e) => new Date(e.date).toDateString())
       .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
 
     let current = 1
@@ -87,7 +96,8 @@ const Dashboard = () => {
 
     for (let i = 1; i < dates.length; i++) {
       const diff =
-        (new Date(dates[i]).getTime() - new Date(dates[i - 1]).getTime()) /
+        (new Date(dates[i]).getTime() -
+          new Date(dates[i - 1]).getTime()) /
         (1000 * 60 * 60 * 24)
 
       if (diff === 1) {
@@ -109,11 +119,11 @@ const Dashboard = () => {
 
   const moodData = Object.entries(moodStats).map(([name, value]) => ({
     name,
-    value
+    value,
   }))
 
   const monthlyEntries = entries.filter(
-    e => new Date(e.date).getMonth() === new Date().getMonth()
+    (e) => new Date(e.date).getMonth() === new Date().getMonth()
   )
 
   /* 🔍 FILTER */
@@ -123,20 +133,15 @@ const Dashboard = () => {
         (!entry.locked &&
           entry.content.toLowerCase().includes(search.toLowerCase()))) &&
       (category === "All" || entry.category === category) &&
+      (mood === "All" || entry.mood === mood) &&
       (showLocked || !entry.locked)
     )
   })
 
   return (
-    <div className="flex min-h-screen text-gray-900 dark:text-white">
+    <div className="min-h-screen w-full p-8 space-y-8 text-gray-900 dark:text-white">
 
-      {/* Background */}
-      <div className="fixed inset-0 -z-20 bg-cover"
-        style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1506744038136-46273834b3fb")' }}
-      />
-      <div className="fixed inset-0 bg-black/40 dark:bg-black/60 -z-10" />
-
-      {/* Video */}
+      {/* 🎬 VIDEO BACKGROUND */}
       <AnimatePresence mode="wait">
         {fade && (
           <motion.video
@@ -153,82 +158,75 @@ const Dashboard = () => {
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
-      <div className="w-64 h-screen p-5 bg-white/70 dark:bg-black/40 backdrop-blur-xl border-r border-white/20">
-        <h2 className="text-xl font-bold mb-6">Journal</h2>
+      {/* 🎨 Appearance */}
+      <ThemeSettings blur={blur} setBlur={setBlur} />
 
-        <div className="flex flex-col gap-3">
-          <Button onClick={() => navigate("/editor")}>✍️ New Entry</Button>
-          <Button onClick={() => setShowLocked(true)}>🔒 View Locked</Button>
-          <Button onClick={() => setShowLocked(false)}>🙈 Hide Locked</Button>
+      {/* 📊 Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+          <p className="text-sm opacity-70">Streak</p>
+          <h2 className="text-3xl font-bold">{streak.current} 🔥</h2>
+          <p className="text-xs">Longest: {streak.longest}</p>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+          <p className="text-sm">Monthly Entries</p>
+          <h2 className="text-3xl font-bold">{monthlyEntries.length}</h2>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+          <p className="text-sm">Top Mood</p>
+          <h2 className="text-3xl">
+            {Object.entries(moodStats).sort((a, b) => b[1] - a[1])[0]?.[0] || "😊"}
+          </h2>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 p-8 space-y-8">
+      {/* 📈 Graph */}
+      {moodData.length > 0 && (
+        <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+          <h2 className="mb-4 font-semibold">Mood Distribution</h2>
 
-        <ThemeSettings blur={blur} setBlur={setBlur} />
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
-            <p className="text-sm opacity-70">Streak</p>
-            <h2 className="text-3xl font-bold">{streak.current} 🔥</h2>
-            <p className="text-xs">Longest: {streak.longest}</p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
-            <p className="text-sm">Monthly Entries</p>
-            <h2 className="text-3xl font-bold">{monthlyEntries.length}</h2>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
-            <p className="text-sm">Top Mood</p>
-            <h2 className="text-3xl">
-              {Object.entries(moodStats).sort((a, b) => b[1] - a[1])[0]?.[0] || "😊"}
-            </h2>
-          </div>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie data={moodData} dataKey="value" outerRadius={80}>
+                {moodData.map((_, i) => (
+                  <Cell key={i} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
+      )}
 
-        {/* Graph */}
-        {moodData.length > 0 && (
-          <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
-            <h2 className="mb-4 font-semibold">Mood Distribution</h2>
+      {/* 🔍 Filters */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <Input
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
 
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={moodData} dataKey="value" outerRadius={80}>
-                  {moodData.map((_, i) => <Cell key={i} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+        <select value={category} onChange={(e) => setCategory(e.target.value)}>
+          <option>All</option>
+          <option>Personal</option>
+          <option>Work</option>
+        </select>
 
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4">
-          <Input
-            placeholder="Search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <select value={mood} onChange={(e) => setMood(e.target.value)}>
+          <option>All</option>
+          <option>😊</option>
+          <option>😢</option>
+          <option>🔥</option>
+        </select>
+      </div>
 
-          <select value={category} onChange={(e) => setCategory(e.target.value)}>
-            <option>All</option>
-            <option>Personal</option>
-            <option>Work</option>
-          </select>
-
-        </div>
-
-        {/* Entries */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEntries.map((entry) => (
-            <EntryCard key={entry.id} entry={entry} />
-          ))}
-        </div>
-
+      {/* 📚 Entries */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredEntries.map((entry) => (
+          <EntryCard key={entry.id} entry={entry} />
+        ))}
       </div>
     </div>
   )
