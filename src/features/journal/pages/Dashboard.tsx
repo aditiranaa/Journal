@@ -20,6 +20,9 @@ const ThemeSettings = ({
 }) => {
   const { setTheme, setFont } = useTheme()
 
+  const btn =
+    "border-gray-300 text-gray-800 hover:bg-gray-200 dark:border-white/20 dark:text-white dark:hover:bg-white/20"
+
   return (
     <div className="w-full p-5 rounded-2xl space-y-4 bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
       <h2 className="font-semibold text-lg text-gray-800 dark:text-white">
@@ -35,14 +38,24 @@ const ThemeSettings = ({
       />
 
       <div className="flex gap-2">
-        <Button onClick={() => setTheme("light")}>Light</Button>
-        <Button onClick={() => setTheme("dark")}>Dark</Button>
+        <Button variant="outline" className={btn} onClick={() => setTheme("light")}>
+          Light
+        </Button>
+        <Button variant="outline" className={btn} onClick={() => setTheme("dark")}>
+          Dark
+        </Button>
       </div>
 
       <div className="flex gap-2">
-        <Button onClick={() => setFont("sans")}>Sans</Button>
-        <Button onClick={() => setFont("serif")}>Serif</Button>
-        <Button onClick={() => setFont("mono")}>Mono</Button>
+        <Button variant="outline" className={btn} onClick={() => setFont("sans")}>
+          Sans
+        </Button>
+        <Button variant="outline" className={btn} onClick={() => setFont("serif")}>
+          Serif
+        </Button>
+        <Button variant="outline" className={btn} onClick={() => setFont("mono")}>
+          Mono
+        </Button>
       </div>
     </div>
   )
@@ -83,7 +96,6 @@ const Dashboard = () => {
   }, [currentMood, videoSrc])
 
   /* 📊 ANALYTICS */
-
   const streak = (() => {
     if (!entries?.length) return { current: 0, longest: 0 }
 
@@ -138,6 +150,9 @@ const Dashboard = () => {
     )
   })
 
+  const glass =
+    "bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl"
+
   return (
     <div className="min-h-screen w-full p-8 space-y-8 text-gray-900 dark:text-white">
 
@@ -161,20 +176,29 @@ const Dashboard = () => {
       {/* 🎨 Appearance */}
       <ThemeSettings blur={blur} setBlur={setBlur} />
 
+      {/* 🔒 Toggle Locked */}
+      <Button
+        variant="outline"
+        className="border-gray-300 text-gray-800 dark:border-white/20 dark:text-white dark:hover:bg-white/20"
+        onClick={() => setShowLocked((prev) => !prev)}
+      >
+        {showLocked ? "Hide Locked 🔒" : "Show Locked 🔓"}
+      </Button>
+
       {/* 📊 Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+        <div className={`p-5 rounded-2xl ${glass}`}>
           <p className="text-sm opacity-70">Streak</p>
           <h2 className="text-3xl font-bold">{streak.current} 🔥</h2>
           <p className="text-xs">Longest: {streak.longest}</p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+        <div className={`p-5 rounded-2xl ${glass}`}>
           <p className="text-sm">Monthly Entries</p>
           <h2 className="text-3xl font-bold">{monthlyEntries.length}</h2>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+        <div className={`p-5 rounded-2xl ${glass}`}>
           <p className="text-sm">Top Mood</p>
           <h2 className="text-3xl">
             {Object.entries(moodStats).sort((a, b) => b[1] - a[1])[0]?.[0] || "😊"}
@@ -184,7 +208,7 @@ const Dashboard = () => {
 
       {/* 📈 Graph */}
       {moodData.length > 0 && (
-        <div className="p-5 rounded-2xl bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+        <div className={`p-5 rounded-2xl ${glass}`}>
           <h2 className="mb-4 font-semibold">Mood Distribution</h2>
 
           <ResponsiveContainer width="100%" height={250}>
@@ -206,19 +230,28 @@ const Dashboard = () => {
           placeholder="Search..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          className="bg-white/70 text-gray-900 dark:bg-white/10 dark:text-white backdrop-blur-md border border-white/20"
         />
 
-        <select value={category} onChange={(e) => setCategory(e.target.value)}>
-          <option>All</option>
-          <option>Personal</option>
-          <option>Work</option>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="px-3 py-2 rounded-lg bg-white/70 text-gray-900 dark:bg-white/10 dark:text-white backdrop-blur-md border border-white/20"
+        >
+          <option value="All">All</option>
+          <option value="Personal">Personal</option>
+          <option value="Work">Work</option>
         </select>
 
-        <select value={mood} onChange={(e) => setMood(e.target.value)}>
-          <option>All</option>
-          <option>😊</option>
-          <option>😢</option>
-          <option>🔥</option>
+        <select
+          value={mood}
+          onChange={(e) => setMood(e.target.value)}
+          className="px-3 py-2 rounded-lg bg-white/70 text-gray-900 dark:bg-white/10 dark:text-white backdrop-blur-md border border-white/20"
+        >
+          <option value="All">All</option>
+          <option value="😊">😊</option>
+          <option value="😢">😢</option>
+          <option value="🔥">🔥</option>
         </select>
       </div>
 
