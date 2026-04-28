@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button"
 import EntryCard from "../components/EntryCard"
-import { useNavigate } from "react-router-dom"
 import { useJournal } from "@/context/journal-context"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
@@ -63,7 +62,7 @@ const ThemeSettings = ({
 
 /* 📊 DASHBOARD */
 const Dashboard = () => {
-  const navigate = useNavigate()
+  
   const { entries } = useJournal()
 
   const [search, setSearch] = useState("")
