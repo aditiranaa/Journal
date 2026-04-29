@@ -5,9 +5,6 @@ import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { useTheme } from "@/context/theme-context"
 import { motion, AnimatePresence } from "framer-motion"
-import {
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer
-} from "recharts"
 
 /* 🎨 SETTINGS */
 const ThemeSettings = ({
@@ -23,7 +20,7 @@ const ThemeSettings = ({
     "border-gray-300 text-gray-800 hover:bg-gray-200 dark:border-white/20 dark:text-white dark:hover:bg-white/20"
 
   return (
-    <div className="w-full p-5 rounded-2xl space-y-4 bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+    <div className="w-full p-5 rounded-2xl space-y-4 bg-white/70 dark:bg-white/10 backdrop-blur-xl">
       <h2 className="font-semibold text-lg text-gray-800 dark:text-white">
         🎨 Appearance
       </h2>
@@ -62,7 +59,6 @@ const ThemeSettings = ({
 
 /* 📊 DASHBOARD */
 const Dashboard = () => {
-  
   const { entries } = useJournal()
 
   const [search, setSearch] = useState("")
@@ -122,17 +118,7 @@ const Dashboard = () => {
     return { current, longest }
   })()
 
-  const moodStats = entries.reduce<Record<string, number>>((acc, e) => {
-    if (!e.mood) return acc
-    acc[e.mood] = (acc[e.mood] || 0) + 1
-    return acc
-  }, {})
-
-  const moodData = Object.entries(moodStats).map(([name, value]) => ({
-    name,
-    value,
-  }))
-
+  
   const monthlyEntries = entries.filter(
     (e) => new Date(e.date).getMonth() === new Date().getMonth()
   )
@@ -151,6 +137,9 @@ const Dashboard = () => {
 
   const glass =
     "bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl"
+
+  const selectClass =
+    "px-3 py-2 rounded-lg bg-black text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
 
   return (
     <div className="min-h-screen w-full p-8 space-y-8 text-gray-900 dark:text-white">
@@ -172,10 +161,8 @@ const Dashboard = () => {
         )}
       </AnimatePresence>
 
-      {/* 🎨 Appearance */}
       <ThemeSettings blur={blur} setBlur={setBlur} />
 
-      {/* 🔒 Toggle Locked */}
       <Button
         variant="outline"
         className="border-gray-300 text-gray-800 dark:border-white/20 dark:text-white dark:hover:bg-white/20"
@@ -184,12 +171,11 @@ const Dashboard = () => {
         {showLocked ? "Hide Locked 🔒" : "Show Locked 🔓"}
       </Button>
 
-      {/* 📊 Stats */}
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className={`p-5 rounded-2xl ${glass}`}>
           <p className="text-sm opacity-70">Streak</p>
           <h2 className="text-3xl font-bold">{streak.current} 🔥</h2>
-          <p className="text-xs">Longest: {streak.longest}</p>
         </div>
 
         <div className={`p-5 rounded-2xl ${glass}`}>
@@ -199,31 +185,11 @@ const Dashboard = () => {
 
         <div className={`p-5 rounded-2xl ${glass}`}>
           <p className="text-sm">Top Mood</p>
-          <h2 className="text-3xl">
-            {Object.entries(moodStats).sort((a, b) => b[1] - a[1])[0]?.[0] || "😊"}
-          </h2>
+          
         </div>
       </div>
 
-      {/* 📈 Graph */}
-      {moodData.length > 0 && (
-        <div className={`p-5 rounded-2xl ${glass}`}>
-          <h2 className="mb-4 font-semibold">Mood Distribution</h2>
-
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie data={moodData} dataKey="value" outerRadius={80}>
-                {moodData.map((_, i) => (
-                  <Cell key={i} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* 🔍 Filters */}
+      {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4">
         <Input
           placeholder="Search..."
@@ -232,21 +198,13 @@ const Dashboard = () => {
           className="bg-white/70 text-gray-900 dark:bg-white/10 dark:text-white backdrop-blur-md border border-white/20"
         />
 
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-white/70 text-gray-900 dark:bg-white/10 dark:text-white backdrop-blur-md border border-white/20"
-        >
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className={selectClass}>
           <option value="All">All</option>
           <option value="Personal">Personal</option>
           <option value="Work">Work</option>
         </select>
 
-        <select
-          value={mood}
-          onChange={(e) => setMood(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-white/70 text-gray-900 dark:bg-white/10 dark:text-white backdrop-blur-md border border-white/20"
-        >
+        <select value={mood} onChange={(e) => setMood(e.target.value)} className={selectClass}>
           <option value="All">All</option>
           <option value="😊">😊</option>
           <option value="😢">😢</option>
@@ -254,7 +212,7 @@ const Dashboard = () => {
         </select>
       </div>
 
-      {/* 📚 Entries */}
+      {/* Entries */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredEntries.map((entry) => (
           <EntryCard key={entry.id} entry={entry} />
